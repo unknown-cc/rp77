@@ -43,4 +43,7 @@ ACTION_BUCKETS = {
     "Message.edit": RateLimitBucket(rate=5, per=5),
     "Message.delete": RateLimitBucket(rate=5, per=5),
     "Message.forward": RateLimitBucket(rate=5, per=5),
+    "Message.clear_reaction": RateLimitBucket(rate=3, per=1),
+    "Message.add_reaction": RateLimitBucket(rate=1, per=1),
+    "Message.remove_reaction": RateLimitBucket(rate=1, per=1),
 }

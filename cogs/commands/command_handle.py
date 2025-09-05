@@ -58,8 +58,11 @@ class command_handle(Cog_Extension):
 
         else:
             # 所有其他沒有返回的錯誤都在這裡。 我們可以只打印默認的 TraceBack。
-            terminal('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-            traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+            try:
+                terminal('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+                traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+            except Exception as e:
+                print(error)
 
 
 async def setup(bot:commands.Bot):
