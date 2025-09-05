@@ -30,6 +30,10 @@ class service_messages(Cog_Extension):
             channel = message.channel
             if not (guild.id == MAIN_GUILD and channel.id == MAIN_CHANNEL_ID) : return
             content = message.content
+            if ">>" in content and content[:2] == ">>":
+                terminal()
+                return
+
             if not "玩家" in content or not "購買項目" in content or not message.mentions: 
                 await channel.send("❌未依格式填寫" , delete_after=30)
                 await message.add_reaction("❌")

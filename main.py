@@ -6,7 +6,7 @@ from xiancord.logger import terminal
 import discord
 import asyncio
 import os
-
+from keep_alive import keep_alive
 # 宣告主體
 
 intents = discord.Intents.all()
@@ -38,6 +38,7 @@ async def load_extensions():
 token = os.environ['TOKEN']
 
 if __name__ == "__main__":
+    keep_alive()
     loop = asyncio.new_event_loop()
     loop.run_until_complete(load_extensions())
     loop.run_until_complete(bot.start(token))
