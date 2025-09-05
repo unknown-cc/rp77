@@ -66,6 +66,7 @@ class service_messages(Cog_Extension):
             guild = channel.guild
             staff = payload.member
             # 機器人點按鈕 返回
+            if not channel.id == SUB_CHANNEL_ID: return
             if staff.bot : return
             # 查找添加反應的訊息
             async for m in channel.history():
@@ -142,6 +143,7 @@ class service_messages(Cog_Extension):
                             await m.delete()
                 embed = discord.Embed(description=f"{FINISH_EMOJI} 交易已完成" , colour=discord.Colour.green())
                 await safe_main_channel.send(content=f"-# <t:{int(now_offset(seconds=10).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=10 , reference=origin_message)
+                await origin_message.add_reaction(FINISH_EMOJI)
         except Exception as e:
             terminal(e)
 
