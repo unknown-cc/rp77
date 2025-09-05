@@ -2,7 +2,6 @@ from datetime import datetime
 import logging
 import threading
 from discord.ext import commands
-from lib import globals
 from xiancord.logger import terminal
 import discord
 import asyncio
@@ -18,7 +17,6 @@ discord.utils.setup_logging(formatter=logging.WARNING,
                             root=False)
 
 terminal(f"正在初始化", "啟動")
-globals.initialize()
 
 async def load_extensions():
         # 載入 cogs
@@ -37,8 +35,7 @@ async def load_extensions():
                         terminal(f"{parent_fix}:{file[:-3]} >> 已載入 <<", "插件")
                         await bot.load_extension(f"{parent_fix}.{file[:-3]}")
 
-if not globals.debug:
-    token = os.environ['TOKEN']
+token = os.environ['TOKEN']
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
