@@ -5,6 +5,7 @@ from .time import now_str
 
 def terminal(text:str , event:str = ""):
     now = now_str("%H:%M:%S")
+    text = str(text)
     if "\n" in text:
         for line in text.split("\n"):
             if event:
