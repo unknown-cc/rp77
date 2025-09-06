@@ -60,7 +60,7 @@ class service_messages(Cog_Extension):
                 return
             if not "玩家" in content or not "購買項目" in content : 
                 for role in member.roles:
-                    if "九龍堂" in role.name : break                        
+                    if "九龍堂" in role.name : return                        
                 else:                    
                     if not member.guild_permissions.administrator :
                         if not member.id == 1004239226688241676:
