@@ -8,6 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from zoneinfo import ZoneInfo
 from xiancord.time import now_str
+from xiancord.voice import init_voice_queue
 class login_event(Cog_Extension):
     def __init__(self, bot:commands.Bot):
         super().__init__(bot)
@@ -48,8 +49,7 @@ class login_event(Cog_Extension):
         login_string += f"ID：{self.bot.user.id}"
 
         await self.bot.wait_until_ready()
-        # await self.bot.change_presence(activity=discord.Game(name = "✨寶島2.0✨" , large_image_text="logo"))
-
+        await init_voice_queue(self.bot)
 
 
 async def setup(bot:commands.Bot):
