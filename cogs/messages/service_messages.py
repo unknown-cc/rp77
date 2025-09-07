@@ -143,10 +143,10 @@ class service_messages(Cog_Extension):
                 if member.voice :
                     if member.voice.channel.guild.id == MAIN_GUILD:
                         # 語音提示 -> 客人
-                        voice_text = f"{str(member_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍後..."
+                        voice_text = f"{str(member_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
                         await voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True)
                 # 大群：通知已接單
-                embed = discord.Embed(description=f"{staff.mention} 已接單\n製作完成將會通知您到據點領取\n如果您在語音中，我們會用語音呼叫您\n請稍後..." , colour=discord.Colour.orange())
+                embed = discord.Embed(description=f"{staff.mention} 已接單\n製作完成將會通知您到據點領取\n如果您在任意市民的語音頻道中，我們會用語音呼叫您\n請稍候..." , colour=discord.Colour.orange())
                 async def reaction():
                     await safe_main_channel.send(embed=embed , reference=origin_message)
                     await message.clear_reaction(READY_EMOJI)
@@ -173,13 +173,13 @@ class service_messages(Cog_Extension):
                     if not staff.id == staff_id:
                         await message.remove_reaction(payload.emoji , staff)
                         return
-                embed = discord.Embed(description=f"{MAKED_EMOJI} \n 您的訂單已製作完成，{origin_message.author.mention} 請至據點領取" , colour=discord.Colour.yellow())
+                embed = discord.Embed(description=f"{MAKED_EMOJI} {origin_message.author.mention} 您的訂單已製作完成，請您至地圖440，右手邊斜坡上方－九龍堂的據點領取" , colour=discord.Colour.yellow())
                 await message.remove_reaction(MAKED_EMOJI , staff)
                 await safe_main_channel.send(embed=embed , reference=origin_message)
                 # 獲取成員的 vc 狀態
                 if member.voice:
                     if member.voice.channel.guild.id == MAIN_GUILD:
-                        voice_text = f"{str(member_name)} 您好，您的訂單已製作完畢，請您至地圖440－九龍堂的據點領取！"
+                        voice_text = f"{str(member_name)} 您好，您的訂單已製作完畢，請您至地圖440，右手邊斜坡上方－九龍堂的據點領取！"
                         await voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True)
             if str(payload.emoji) == FINISH_EMOJI:
                 if matched:

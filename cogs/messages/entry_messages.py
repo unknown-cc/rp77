@@ -69,7 +69,7 @@ class entry_messages(Cog_Extension):
             text = f'注意：警察{player_name}{status}了'
         else:
             text = f'警察{player_name}{status}了'
-        await voice_queue.add_to_queue(VOICE_CHANNEL_ID , "anime-wow-sound-effect.mp3" , type="file" , volume=0.2 , delete_file=False)
+        # await voice_queue.add_to_queue(VOICE_CHANNEL_ID , "anime-wow-sound-effect.mp3" , type="file" , volume=0.2 , delete_file=False)
         await voice_queue.add_to_queue(VOICE_CHANNEL_ID , text , type="text" , volume=1.0 , delete_file=True)
         
 
