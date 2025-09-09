@@ -3,6 +3,7 @@ import os
 import traceback
 import discord
 from discord.ext import commands
+import emoji
 from xiancord.core import Cog_Extension
 from xiancord.logger import terminal
 from xiancord.database import db , db_init
@@ -33,7 +34,7 @@ class service_messages(Cog_Extension):
 
     async def speak1(self , voice_text , * , ding = True):
         if ding:
-            await voice_queue.add_to_queue(VOICE_CHANNEL_ID1 , "anime-wow-sound-effect.mp3" , type="file" , volume=0.2 , delete_file=False)
+            await voice_queue.add_to_queue(VOICE_CHANNEL_ID1 , "cash-register-kaching-sound-effect-125042" , type="file" , volume=0.2 , delete_file=False)
         await voice_queue.add_to_queue(VOICE_CHANNEL_ID1 , voice_text , type="text" , volume=1.0 , delete_file= True)
     
     def get_rpnick_name(self , member : discord.Member):
@@ -48,6 +49,20 @@ class service_messages(Cog_Extension):
     @commands.Cog.listener("on_message")
     async def on_message(self , message:discord.Message):
         try:
+            # test
+            # guild = self.bot.get_guild(1307808857858244629)
+            # channel = self.bot.get_channel(1406370066404216912)
+            # author = message.author
+            # if  author.id == 1004239226688241676 :
+            #     async for m in channel.history():
+            #         if m.id == 1414760762211303496:
+            #             message = m
+            #     terminal(message.content)
+            #     terminal(message.mentions)
+            #     terminal(message.role_mentions)
+
+            # 
+            
             message = global_rate_limiter.get(message)
             member = message.author
             if member.bot : return
@@ -68,12 +83,40 @@ class service_messages(Cog_Extension):
                             await channel.send(content=f"-# <t:{int(now_offset(seconds=30).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=30 ,reference=message)
                             await message.add_reaction(ERROR_EMOJI)
                             return
-            if not message.mentions : return
+            if not (message.mentions or message.role_mentions)  : return
             if not ("玩家" in content and "購買項目" in content): return
+            if message.mentions:
+                for member in message.mentions:
+                    content = content.replace(member.mention , f"@{member.nick} ({member.id})")
+            elif message.role_mentions:
+                for role in message.role_mentions:
+                    content = content.replace(role.mention , f"@{role.name} ({role.id})")
+
             content = f"<@&1413338884800249936> [業務連結]({message.jump_url})\n" + content + f"\n-# {READY_EMOJI}﹡接單 \n-# {MAKED_EMOJI}﹡通知客人領取\n-# {FINISH_EMOJI}﹡完成業務\n "
             sub_channel = self.bot.get_channel(SUB_CHANNEL_ID)
-            msg = await sub_channel.send(content=content)
-            await msg.add_reaction(READY_EMOJI)
+            await sub_channel.send(content=content)
+            # 子群：綁定接單人員
+            
+            # main_guild = self.bot.get_guild(MAIN_GUILD)            
+            # staff = main_guild.get_member(828496960625442836)
+
+            # embed = discord.Embed(description=f"接單人員：{staff.mention}" , colour=discord.Colour.blue())
+            # await msg.edit(embed=embed)
+            # if member.voice :
+            #     if member.voice.channel.guild.id == MAIN_GUILD:
+            #         # 語音提示 -> 客人
+            #         voice_text = f"{str(member_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
+            #         await voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True)
+            # 大群：通知已接單
+            # embed = discord.Embed(description=f"{staff.mention} 已接單\n製作完成將會通知您到據點領取\n\n如果您在任意市民的語音頻道中，\n我們會用語音呼叫您，請稍候..." , colour=discord.Colour.orange())
+            # async def reaction():
+            #     # await message.channel.send(embed=embed , reference=message)
+            #     await message.clear_reaction(READY_EMOJI)
+            #     await message.add_reaction(MAKED_EMOJI)
+            #     await message.add_reaction(FINISH_EMOJI)
+            # asyncio.create_task(reaction())
+
+            # await msg.add_reaction(READY_EMOJI)
             # 語音提示
             voice_text = "業，務，有，單，誰要接呢？"
             await self.speak1(voice_text)
@@ -97,6 +140,8 @@ class service_messages(Cog_Extension):
             # 接單人員
             # terminal(staff)
             staff_name = self.get_rpnick_name(staff)
+            staff_name = ''.join(c for c in staff_name if not emoji.is_emoji(c))
+
             # terminal(staff_name)
             # 查找添加反應的訊息
             async for m in channel.history():
@@ -124,6 +169,7 @@ class service_messages(Cog_Extension):
             # 買家
             member = origin_message.author
             member_name = self.get_rpnick_name(member)
+            member_name = ''.join(c for c in member_name if not emoji.is_emoji(c))
             
             safe_main_channel = global_rate_limiter.get(main_channel)
             
@@ -181,6 +227,8 @@ class service_messages(Cog_Extension):
                     if member.voice.channel.guild.id == MAIN_GUILD:
                         voice_text = f"{str(member_name)} 您好，您的訂單已製作完畢，請您至地圖440，右手邊斜坡上方－九龍堂的據點領取！"
                         await voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True)
+                voice_text = f"{staff_name} 已通知 {member_name} 前來取貨"
+                await self.speak1(voice_text , ding=False)
             if str(payload.emoji) == FINISH_EMOJI:
                 if matched:
                     if not staff.id == staff_id:

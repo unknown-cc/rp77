@@ -30,7 +30,7 @@ class entry_messages(Cog_Extension):
     def __init__(self, bot:commands.Bot):
         super().__init__(bot)
         self.event = "業務事件"
-        # self.server_url = "http://103.122.191.68:30120"
+
         # self.channel_id = 1411423445794689195  # ⚠️ 換成你的 Discord 頻道 ID
 
 
@@ -72,6 +72,6 @@ class entry_messages(Cog_Extension):
         # await voice_queue.add_to_queue(VOICE_CHANNEL_ID , "anime-wow-sound-effect.mp3" , type="file" , volume=0.2 , delete_file=False)
         await voice_queue.add_to_queue(VOICE_CHANNEL_ID , text , type="text" , volume=1.0 , delete_file=True)
         
-
+    
 async def setup(bot:commands.Bot):
     await bot.add_cog(entry_messages(bot))
