@@ -94,9 +94,10 @@ class service_messages(Cog_Extension):
 
             content = f"<@&1413338884800249936> [業務連結]({message.jump_url})\n" + content + f"\n-# {READY_EMOJI}﹡接單 \n-# {MAKED_EMOJI}﹡通知客人領取\n-# {FINISH_EMOJI}﹡完成業務\n "
             sub_channel = self.bot.get_channel(SUB_CHANNEL_ID)
-            await sub_channel.send(content=content)
+            msg = await sub_channel.send(content=content)
             # 子群：綁定接單人員
             
+            await msg.add_reaction(READY_EMOJI)
             # main_guild = self.bot.get_guild(MAIN_GUILD)            
             # staff = main_guild.get_member(828496960625442836)
 
@@ -116,7 +117,6 @@ class service_messages(Cog_Extension):
             #     await message.add_reaction(FINISH_EMOJI)
             # asyncio.create_task(reaction())
 
-            # await msg.add_reaction(READY_EMOJI)
             # 語音提示
             voice_text = "業，務，有，單，誰要接呢？"
             await self.speak1(voice_text)
