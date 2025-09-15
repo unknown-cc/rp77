@@ -8,7 +8,7 @@ from xiancord.core import Cog_Extension
 from xiancord.logger import terminal
 from xiancord.database import db , db_init
 from xiancord.time import now_offset
-from xiancord.utils import discord_name , find1
+from xiancord.utils import discord_name , find1 , has_reacted
 from xiancord.voice import voice_queue
 from xiancord.rate_limiter import global_rate_limiter
 import re
@@ -174,17 +174,12 @@ class service_messages(Cog_Extension):
             safe_main_channel = global_rate_limiter.get(main_channel)
             
             if str(payload.emoji) == READY_EMOJI:
-                for reaction in message.reactions:
-                    if reaction.emoji == READY_EMOJI:
-                        async for user in reaction.users():
-                            if user.id == self.bot.user.id:
-                                break
-                        else:
-                            await message.remove_reaction(payload.emoji , staff)
-                            return
+                if message.embeds : return
                 # 子群：綁定接單人員
                 embed = discord.Embed(description=f"接單人員：{staff.mention}" , colour=discord.Colour.blue())
                 await message.edit(embed=embed)
+                await message.clear_reaction(READY_EMOJI)
+               
                 # 獲取成員的 vc 狀態
                 if member.voice :
                     if member.voice.channel.guild.id == MAIN_GUILD:
@@ -195,7 +190,6 @@ class service_messages(Cog_Extension):
                 embed = discord.Embed(description=f"{staff.mention} 已接單\n製作完成將會通知您到據點領取\n\n如果您在任意市民的語音頻道中，\n我們會用語音呼叫您，請稍候..." , colour=discord.Colour.orange())
                 async def reaction():
                     await safe_main_channel.send(embed=embed , reference=origin_message)
-                    await message.clear_reaction(READY_EMOJI)
                     await message.add_reaction(MAKED_EMOJI)
                     await message.add_reaction(FINISH_EMOJI)
                 asyncio.create_task(reaction())
