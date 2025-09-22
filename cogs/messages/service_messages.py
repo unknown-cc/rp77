@@ -199,7 +199,9 @@ class OrderProccessingView(ServiceBaseView):
             if not m.reference: continue
             if m.reference.message_id == origin_message.id:
                 if m.author.id ==self.bot.user.id:
-                    await asyncio.create_task(m.delete())
+                    try:
+                        await m.delete()
+                    except : pass
         embed = discord.Embed(description=f"{FINISH_EMOJI} 交易已完成" , colour=discord.Colour.green())
         await safe_main_channel.send(content=f"-# <t:{int(now_offset(seconds=DELETE_TIME).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=DELETE_TIME , reference=origin_message)
         await origin_message.add_reaction(FINISH_EMOJI)
