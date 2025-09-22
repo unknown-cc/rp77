@@ -9,6 +9,7 @@ from apscheduler.triggers.cron import CronTrigger
 from zoneinfo import ZoneInfo
 from xiancord.time import now_str
 from xiancord.voice import init_voice_queue
+from xiancord.emojis import emojis_init
 class login_event(Cog_Extension):
     def __init__(self, bot:commands.Bot):
         super().__init__(bot)
@@ -39,6 +40,9 @@ class login_event(Cog_Extension):
 
     @commands.Cog.listener("on_ready")
     async def on_ready(self):
+        await self.bot.wait_until_ready()
+        emojis_init(self.bot)
+        await init_voice_queue(self.bot)
         terminal(f"機器人 >> 已載入 << " , "啟動")
         # 插件
         terminal("正在載入...","插件")
@@ -48,8 +52,6 @@ class login_event(Cog_Extension):
         login_string = f"機器人：{self.bot.user}\n"
         login_string += f"ID：{self.bot.user.id}"
 
-        await self.bot.wait_until_ready()
-        await init_voice_queue(self.bot)
 
 
 async def setup(bot:commands.Bot):
