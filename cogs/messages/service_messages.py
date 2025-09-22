@@ -3,6 +3,8 @@ import os
 import traceback
 import discord
 from discord.ext import commands
+from discord.ui import View , Button , Modal , TextInput , Label
+from discord import TextStyle , Embed , ButtonStyle , Interaction , Message
 import emoji
 from xiancord.core import Cog_Extension
 from xiancord.logger import terminal
@@ -11,9 +13,11 @@ from xiancord.time import now_offset
 from xiancord.utils import discord_name , find1 , has_reacted
 from xiancord.voice import voice_queue
 from xiancord.rate_limiter import global_rate_limiter
+from xiancord.emojis import emojigot
 import re
 import asyncio
 import logging
+
 logging.basicConfig(level=logging.INFO)
 
 MAIN_GUILD = 1307808857858244629
@@ -23,227 +27,241 @@ SUB_CHANNEL_ID = 1413338432247304353
 READY_EMOJI = "<a:load:972447733971550220>"
 MAKED_EMOJI = "<a:ding1:1004602332971028581>"
 FINISH_EMOJI = "<a:check4:972447733740867654>"
-ERROR_EMOJI = "<a:no2:972097574343430174>"
-VOICE_CHANNEL_ID1 = 1383475662546931804
+ERROR_EMOJI = "<a:no3:976098818154176553>"
+VOICE_CHANNEL_ID1 = 1409500039658864762
 # VOICE_CHANNEL_ID2 = 1411635241142980609 # 需不同 guild
+DELETE_TIME = 20
+
+
+def get_rpnick_name(bot : commands.Bot, member : discord.Member):
+        main_guild = bot.get_guild(MAIN_GUILD)
+        main_member = main_guild.get_member(member.id)
+        member_nick = discord_name(member)
+        if main_member :
+            nick = find1(r'[|｜]\s*([^\s]+)\s*$' , member_nick)
+            return nick if nick else member_nick
+        else:
+            return member_nick
+        
+async def speak1(voice_text , * , ding = True):
+        if ding:
+            await voice_queue.add_to_queue(VOICE_CHANNEL_ID1 , "cash-register-kaching-sound-effect-125042.mp3" , type="file" , volume=0.2 , delete_file=False)
+        await voice_queue.add_to_queue(VOICE_CHANNEL_ID1 , voice_text , type="text" , volume=1.0 , delete_file= True)
+
+class ServiceBaseView(View):
+    def __init__(self, bot : commands.Bot , * ,timeout = None , message : discord.Message = None , staff_id : int = 0 , buyer : discord.Member = None):
+        super().__init__(timeout=timeout)
+        self.bot = bot
+        self.staff_id = staff_id
+        self.buyer = buyer
+        self.message = message
+
+    async def check_message(self):
+        message = self.message
+        if not message : return None
+        channel = self.bot.get_channel(message.channel.id)
+        try:
+            message = await channel.fetch_message(message.id)
+        except discord.NotFound:
+            # terminal(f"找不到訊息 : {self.message.id} ")
+            self.message = None ; return None
+        if message : 
+            self.message = message
+            return message
+        else:
+            self.message = None ; return None
+
+    async def get_staff(self , embed:Embed):
+        desc = embed.description
+        self.staff_id = 0
+        matched = False
+        if isinstance(desc , str):
+            matched = re.search(r"(\d+)>", desc)
+            if matched :
+                self.staff_id = int(matched.group(1))
+
+    async def get_origin_message(self , message : Message):
+        # 抓取內容
+        content = message.content
+        # 分析各行
+        lines = content.split("\n")
+        origin_message_id = 0
+        for line in lines:
+            # 查找業務訊息ID
+            if "http" in line:
+                matched = re.search(r"/(\d+)$", line[:-1])
+                if matched : 
+                    origin_message_id = int(matched.group(1))
+        # 抓取業務訊息物件
+            main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
+            self.buyer = None
+            self.message = None
+            # 翻找訊息
+            async for m in main_channel.history():
+                if m.id == origin_message_id:
+                    self.buyer = m.author
+                    self.message = m
+                    break
+
+    async def interaction_check(self, interaction:Interaction):
+        if not self.message:
+            await self.get_origin_message(interaction.message)
+        if not await self.check_message():
+            await interaction.response.edit_message(view=BuyerCancelView(self.bot));return
+        embeds = interaction.message.embeds
+        if not embeds: return True
+        embed = embeds[0]
+        await self.get_staff(embed)
+        if self.staff_id == interaction.user.id:
+            return True
+        else:
+            # await interaction.response.defer()
+            return False
+class BuyerCancelView(ServiceBaseView):
+    def __init__(self, bot, *, timeout=None, message = None, staff_id = 0, buyer = None):
+        super().__init__(bot, timeout=timeout, message=message, staff_id=staff_id, buyer=buyer)
+    
+    @discord.ui.button(label="找不到訂單訊息或買家取消了訂單" , emoji=emojigot("no3") , disabled=True)
+    async def NoCallback(self , interaction:Interaction , button : Button):
+        pass
+
+class AcceptOrderView(ServiceBaseView):
+    def __init__(self, bot, *, timeout=None, message = None, staff_id = 0, buyer = None):
+        super().__init__(bot, timeout=timeout, message=message, staff_id=staff_id, buyer=buyer)
+
+    @discord.ui.button(label="接單" , emoji=emojigot("AnimeDot_yellow") ,
+                       style=ButtonStyle.grey , custom_id="AcceptOrderButton") 
+    async def AcceptOrderButtonCallback(self, interaction : Interaction , button : Button):
+        button.disabled = True
+        button.label = "處理中..."
+        button.emoji = emojigot("load")
+        await interaction.response.edit_message(view=self)
+        buyer = self.buyer
+        # if not origin_message :
+        #     await interaction.message.edit(view=BuyerCancelView(self.bot));return
+        # origin_message = self.message
+        staff = interaction.user
+        staff_name = get_rpnick_name(self.bot , staff)
+        embed = Embed(description=f"接單人員：{staff.mention}" , colour=discord.Colour.blue())
+        await interaction.message.edit(embed=embed , view=OrderProccessingView(bot = self.bot , message=self.message , buyer=self.buyer , staff_id=self.staff_id))
+        buyer_name = get_rpnick_name(self.bot , buyer)
+        voice_text = f"{staff_name} 正在處理 {buyer_name} 的業務"
+        await asyncio.create_task(speak1(voice_text , ding=False))
+        self.staff_id = interaction.user.id
+        # 獲取成員的 vc 狀態
+        if buyer.voice :
+            if buyer.voice.channel.guild.id == MAIN_GUILD:
+                # 語音提示 -> 客人
+                voice_text = f"{str(buyer_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
+                await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True))
+    
+class OrderProccessingView(ServiceBaseView):
+    def __init__(self, bot, *, timeout=None, message = None, staff_id = 0, buyer = None):
+        super().__init__(bot, timeout=timeout, message=message, staff_id=staff_id, buyer=buyer)
+    
+    @discord.ui.button(label="通知客戶來據點取貨" , emoji=emojigot("AnimeDot_orange") ,
+                       style=ButtonStyle.grey , custom_id="NotifyButton")
+    async def NotifyButtonCallback(self , interaction : Interaction , button : Button):
+        origin_message = self.message
+        # if not origin_message :
+        #     await interaction.message.edit(view=BuyerCancelView(self.bot));return
+        buyer = self.buyer
+        embed = Embed(description=f"{emojigot('ding1')} 已通知客戶前來取貨！" , colour=discord.Colour.green())
+        await interaction.response.send_message(embed=embed , ephemeral=True , delete_after=DELETE_TIME)
+        staff = interaction.user
+        staff_name = get_rpnick_name(self.bot , staff)
+        buyer_name = get_rpnick_name(self.bot , buyer)
+        main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
+        safe_main_channel = global_rate_limiter.get(main_channel)
+        embed = discord.Embed(description=f"{MAKED_EMOJI} {origin_message.author.mention} 您的訂單已製作完成。\n請您至地圖440，右手邊斜坡上方－九龍堂的據點領取" , colour=discord.Colour.yellow())
+        await asyncio.create_task(safe_main_channel.send(embed=embed , reference=origin_message))
+        # 獲取成員的 vc 狀態
+        if buyer.voice:
+            if buyer.voice.channel.guild.id == MAIN_GUILD:
+                voice_text = f"{str(buyer_name)} 您好，您的訂單已製作完畢，請您至地圖440，右手邊斜坡上方－九龍堂的據點領取！"
+                await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True))
+        voice_text = f"{staff_name} 已通知 {buyer_name} 前來取貨"
+        await asyncio.create_task(speak1(voice_text , ding=False))
+        
+    
+    @discord.ui.button(label="完成訂單" , emoji=emojigot("AnimeDot_green") ,
+                       style=ButtonStyle.grey , custom_id="FinishButton")
+    async def FinishButtonCallback(self , interaction : Interaction , button : Button):
+        await interaction.response.edit_message(view=None)
+        origin_message = self.message
+        buyer = self.buyer
+        staff = interaction.user
+        staff_name = get_rpnick_name(self.bot , staff)
+        buyer_name = get_rpnick_name(self.bot , buyer)
+        main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
+        safe_main_channel = global_rate_limiter.get(main_channel)
+        async for m in main_channel.history():
+            if not m.reference: continue
+            if m.reference.message_id == origin_message.id:
+                if m.author.id ==self.bot.user.id:
+                    await asyncio.create_task(m.delete())
+        embed = discord.Embed(description=f"{FINISH_EMOJI} 交易已完成" , colour=discord.Colour.green())
+        await safe_main_channel.send(content=f"-# <t:{int(now_offset(seconds=DELETE_TIME).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=DELETE_TIME , reference=origin_message)
+        await origin_message.add_reaction(FINISH_EMOJI)
+        voice_text = f"{staff_name} 已將 {buyer_name} 的訂單處理完畢"
+        await speak1(voice_text , ding=False)
+        await interaction.message.add_reaction(FINISH_EMOJI)
 
 class service_messages(Cog_Extension):
     def __init__(self, bot:commands.Bot):
         super().__init__(bot)
         self.event = "業務事件"
 
-    async def speak1(self , voice_text , * , ding = True):
-        if ding:
-            await voice_queue.add_to_queue(VOICE_CHANNEL_ID1 , "cash-register-kaching-sound-effect-125042" , type="file" , volume=0.2 , delete_file=False)
-        await voice_queue.add_to_queue(VOICE_CHANNEL_ID1 , voice_text , type="text" , volume=1.0 , delete_file= True)
-    
-    def get_rpnick_name(self , member : discord.Member):
-        main_guild = self.bot.get_guild(MAIN_GUILD)
-        main_member = main_guild.get_member(member.id)
-        member_nick = discord_name(member)
-        if main_member :
-            return find1(r'[|｜]\s*([^\s]+)\s*$' , member_nick)
-        else:
-            return member_nick
-
     @commands.Cog.listener("on_message")
     async def on_message(self , message:discord.Message):
         try:
-            # test
-            # guild = self.bot.get_guild(1307808857858244629)
-            # channel = self.bot.get_channel(1406370066404216912)
-            # author = message.author
-            # if  author.id == 1004239226688241676 :
-            #     async for m in channel.history():
-            #         if m.id == 1414760762211303496:
-            #             message = m
-            #     terminal(message.content)
-            #     terminal(message.mentions)
-            #     terminal(message.role_mentions)
-
-            # 
-            
-            message = global_rate_limiter.get(message)
+            safe_message = global_rate_limiter.get(message)
             member = message.author
+            member_name = get_rpnick_name(self.bot , member)
             if member.bot : return
             guild = message.guild
             channel = message.channel
             channel = global_rate_limiter.get(channel)
             if not (guild.id == MAIN_GUILD and channel.id == MAIN_CHANNEL_ID) : return
             content = message.content
-            if ">>" in content and content[:2] == ">>":
-                return
-            if not "玩家" in content or not "購買項目" in content : 
+            # 命令返回
+            if ">>" in content and content[:2] == ">>" : return
+            if not ("玩家" in content and  "購買項目" in content) : return
+            if not (message.mentions or message.role_mentions) : 
                 for role in member.roles:
-                    if "九龍堂" in role.name : return                        
+                    if "九龍堂" in role.name : return
                 else:                    
-                    if not member.guild_permissions.administrator :
-                        if not member.id == 1004239226688241676:
-                            embed = discord.Embed(description=f"{ERROR_EMOJI} 未依格式填寫或標註成員" , colour=discord.Colour.red())
-                            await channel.send(content=f"-# <t:{int(now_offset(seconds=30).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=30 ,reference=message)
-                            await message.add_reaction(ERROR_EMOJI)
-                            return
-            if not (message.mentions or message.role_mentions)  : return
-            if not ("玩家" in content and "購買項目" in content): return
+                    if not member.id == 1004239226688241676 or True:
+                        embed = discord.Embed(description=f"{ERROR_EMOJI} 請標註成員或身分組" , colour=discord.Colour.red())
+                        await channel.send(content=f"-# <t:{int(now_offset(seconds=DELETE_TIME).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=DELETE_TIME ,reference=message)
+                        await safe_message.add_reaction(ERROR_EMOJI)
+                        return
             if message.mentions:
                 for member in message.mentions:
-                    content = content.replace(member.mention , f"@{member.nick} ({member.id})")
+                    content = content.replace(member.mention , f"@{get_rpnick_name(self.bot , member)} ({member.id})")
             elif message.role_mentions:
                 for role in message.role_mentions:
                     content = content.replace(role.mention , f"@{role.name} ({role.id})")
 
-            content = f"<@&1413338884800249936> [業務連結]({message.jump_url})\n" + content + f"\n-# {READY_EMOJI}﹡接單 \n-# {MAKED_EMOJI}﹡通知客人領取\n-# {FINISH_EMOJI}﹡完成業務\n "
+            content = f"<@&1413338884800249936> [業務連結]({message.jump_url})\n" + content
             sub_channel = self.bot.get_channel(SUB_CHANNEL_ID)
-            msg = await sub_channel.send(content=content)
-            # 子群：綁定接單人員
-            
-            await msg.add_reaction(READY_EMOJI)
-            # main_guild = self.bot.get_guild(MAIN_GUILD)            
-            # staff = main_guild.get_member(828496960625442836)
-
-            # embed = discord.Embed(description=f"接單人員：{staff.mention}" , colour=discord.Colour.blue())
-            # await msg.edit(embed=embed)
-            # if member.voice :
-            #     if member.voice.channel.guild.id == MAIN_GUILD:
-            #         # 語音提示 -> 客人
-            #         voice_text = f"{str(member_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
-            #         await voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True)
-            # 大群：通知已接單
-            # embed = discord.Embed(description=f"{staff.mention} 已接單\n製作完成將會通知您到據點領取\n\n如果您在任意市民的語音頻道中，\n我們會用語音呼叫您，請稍候..." , colour=discord.Colour.orange())
-            # async def reaction():
-            #     # await message.channel.send(embed=embed , reference=message)
-            #     await message.clear_reaction(READY_EMOJI)
-            #     await message.add_reaction(MAKED_EMOJI)
-            #     await message.add_reaction(FINISH_EMOJI)
-            # asyncio.create_task(reaction())
-
-            # 語音提示
+            await sub_channel.send(content=content , view=AcceptOrderView(bot = self.bot , message=message , buyer=message.author))
+            text = "已收到您的訂單，請耐心等候業務人員接單！"
+            embed = Embed(description=f"{emojigot('butterfly1')} {text}" , colour=discord.Colour.green())
+            await asyncio.create_task(channel.send(content=f"-# <t:{int(now_offset(seconds=DELETE_TIME).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=DELETE_TIME ,reference=message))
+            # 獲取成員的 vc 狀態
+            if member.voice:
+                if member.voice.channel.guild.id == MAIN_GUILD:
+                    voice_text = f"{str(member_name)} 您好，{text}"
+                    await asyncio.create_task(voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True))
             voice_text = "業，務，有，單，誰要接呢？"
-            await self.speak1(voice_text)
+            await asyncio.create_task(speak1(voice_text))
         except Exception as e:
-            terminal(e)
-
-    @commands.Cog.listener("on_raw_reaction_add")
-    async def on_raw_reaction_add(self , payload : discord.RawReactionActionEvent):
-        try:
-            # 參數
-            message = None
-            channel = self.bot.get_channel(payload.channel_id) # 業務通知的頻道
-            safe_channel = global_rate_limiter.get(channel)
-            # 子群
-            guild = channel.guild
-            # 處理員工
-            staff = payload.member
-            # 機器人點按鈕 返回
-            if not channel.id == SUB_CHANNEL_ID: return
-            if staff.bot : return
-            # 接單人員
-            # terminal(staff)
-            staff_name = self.get_rpnick_name(staff)
-            staff_name = ''.join(c for c in staff_name if not emoji.is_emoji(c))
-
-            # terminal(staff_name)
-            # 查找添加反應的訊息
-            async for m in channel.history():
-                if m.id == payload.message_id and m.author.bot:
-                    message = m
-                    break
-            # 抓取內容
-            content = message.content
-            # 分析各行
-            lines = content.split("\n")
-            origin_message_id = 0
-            for line in lines:
-                # 查找業務訊息ID
-                if "http" in line:
-                    matched = re.search(r"/(\d+)$", line[:-1])
-                    if matched : 
-                        origin_message_id = int(matched.group(1))
-            # 抓取業務訊息物件
-            main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
-            origin_message = None
-            # 翻找訊息
-            async for m in main_channel.history():
-                if m.id == origin_message_id:
-                    origin_message = global_rate_limiter.get(m)
-            # 買家
-            member = origin_message.author
-            member_name = self.get_rpnick_name(member)
-            member_name = ''.join(c for c in member_name if not emoji.is_emoji(c))
-            
-            safe_main_channel = global_rate_limiter.get(main_channel)
-            
-            if str(payload.emoji) == READY_EMOJI:
-                if message.embeds : return
-                # 子群：綁定接單人員
-                embed = discord.Embed(description=f"接單人員：{staff.mention}" , colour=discord.Colour.blue())
-                await message.edit(embed=embed)
-                await message.clear_reaction(READY_EMOJI)
-               
-                # 獲取成員的 vc 狀態
-                if member.voice :
-                    if member.voice.channel.guild.id == MAIN_GUILD:
-                        # 語音提示 -> 客人
-                        voice_text = f"{str(member_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
-                        await voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True)
-                # 大群：通知已接單
-                embed = discord.Embed(description=f"{staff.mention} 已接單\n製作完成將會通知您到據點領取\n\n如果您在任意市民的語音頻道中，\n我們會用語音呼叫您，請稍候..." , colour=discord.Colour.orange())
-                async def reaction():
-                    await safe_main_channel.send(embed=embed , reference=origin_message)
-                    await message.add_reaction(MAKED_EMOJI)
-                    await message.add_reaction(FINISH_EMOJI)
-                asyncio.create_task(reaction())
-                # 子群：避免搶單
-                # embed = discord.Embed(description=f"{READY_EMOJI} 避免搶單提醒：{staff.mention} 正在處理此業務...." , colour=discord.Colour.orange())
-                # await safe_channel.send(content=f"-# <t:{int(now_offset(seconds=60).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=60,reference=message)
-                voice_text = f"{staff_name} 正在處理 {member_name} 的業務"
-                await self.speak1(voice_text , ding=False)
-
-            if not message.embeds:
-                return
-            desc = message.embeds[0].description
-            staff_id = 0
-            matched = False
-            if isinstance(desc , str):
-                matched = re.search(r"(\d+)>", desc)
-                if matched :
-                    staff_id = int(matched.group(1))
-            if str(payload.emoji) == MAKED_EMOJI:
-                if matched:
-                    if not staff.id == staff_id:
-                        await message.remove_reaction(payload.emoji , staff)
-                        return
-                embed = discord.Embed(description=f"{MAKED_EMOJI} {origin_message.author.mention} 您的訂單已製作完成。\n請您至地圖440，右手邊斜坡上方－九龍堂的據點領取" , colour=discord.Colour.yellow())
-                await message.remove_reaction(MAKED_EMOJI , staff)
-                await safe_main_channel.send(embed=embed , reference=origin_message)
-                # 獲取成員的 vc 狀態
-                if member.voice:
-                    if member.voice.channel.guild.id == MAIN_GUILD:
-                        voice_text = f"{str(member_name)} 您好，您的訂單已製作完畢，請您至地圖440，右手邊斜坡上方－九龍堂的據點領取！"
-                        await voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True)
-                voice_text = f"{staff_name} 已通知 {member_name} 前來取貨"
-                await self.speak1(voice_text , ding=False)
-            if str(payload.emoji) == FINISH_EMOJI:
-                if matched:
-                    if not staff.id == staff_id:
-                        await message.remove_reaction(payload.emoji , staff)
-                        return
-                await message.clear_reaction(MAKED_EMOJI)
-                await message.remove_reaction(FINISH_EMOJI , self.bot.user)
-                async for m in main_channel.history():
-                    if not m.reference: continue
-                    if m.reference.message_id == origin_message.id:
-                        if m.author.id ==self.bot.user.id:
-                            await m.delete()
-                embed = discord.Embed(description=f"{FINISH_EMOJI} 交易已完成" , colour=discord.Colour.green())
-                await safe_main_channel.send(content=f"-# <t:{int(now_offset(seconds=10).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=10 , reference=origin_message)
-                await origin_message.add_reaction(FINISH_EMOJI)
-
-                voice_text = f"{staff_name} 已將 {member_name} 的訂單處理完畢"
-                await self.speak1(voice_text , ding=False)
-        except Exception as e:
-            terminal(e)
             traceback.print_exc()
+            terminal(e)
 
 async def setup(bot:commands.Bot):
     await bot.add_cog(service_messages(bot))
+    bot.add_view(AcceptOrderView(bot=bot))
+    bot.add_view(OrderProccessingView(bot=bot))
+

@@ -1,6 +1,8 @@
+from discord.ext import commands
 from .wrapper import RateLimitedDiscordObject
 from typing import TypeVar, cast
-
+from ..logger import terminal
+import traceback
 T = TypeVar("T")  # 泛型變數
 
 class GlobalRateLimiter:
@@ -8,6 +10,7 @@ class GlobalRateLimiter:
         self._channel_buckets = {}
         self._member_buckets = {}
         self._guild_buckets = {}
+        self._message_buckets = {}
 
     def get(self, obj: T) -> T:
         if hasattr(obj, 'id'):
@@ -17,6 +20,9 @@ class GlobalRateLimiter:
                 return cast(T, self._wrap(self._member_buckets, obj))
             elif hasattr(obj, 'name') and hasattr(obj, 'channels'):
                 return cast(T, self._wrap(self._guild_buckets, obj))
+            elif hasattr(obj, 'add_reaction') and callable(obj.add_reaction):
+                return cast(T, self._wrap(self._message_buckets, obj))
+        terminal(f"{obj} 沒有找到支援的類型","GlobalRateLimiter")
         return obj  # 不支援的類型，原樣返回
 
     def _wrap(self, pool, obj):

@@ -88,7 +88,7 @@ class VoiceQueue:
     async def text_speak(self, text:str):
         file = f"speak_{uuid.uuid4().hex}.mp3"
         voice = "zh-TW-HsiaoChenNeural"  # 甜美女聲
-        terminal(text)
+        # terminal(text)
         communicate = edge_tts.Communicate(text, voice=voice)
         await communicate.save(file)
         return file

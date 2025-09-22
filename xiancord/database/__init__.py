@@ -13,5 +13,5 @@ db = SpreadsheetManager()
 async def db_init():
     with open(credentials_path , "r", encoding="utf-8") as f:
         creds = json.load(f)
-    # await db.init(creds)
-    # await db.add_spreadsheet("醉生夢死資料庫")
+    await db.init(creds)
+    await db.add_spreadsheet("遊戲資料庫")

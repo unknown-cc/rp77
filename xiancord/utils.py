@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
 from xiancord import terminal
+from .rate_limiter import global_rate_limiter
 from typing import Union
 import re
+import asyncio
 
 
 def find1(pattern: str, text: str) -> Union[str , None]:
@@ -87,9 +89,10 @@ async def list_emojis(bot: commands.Bot, ctx: commands.Context):
             for e in g.emojis:
                 text += f"<{'a' if e.animated else ''}:{e.name}:{e.id}> → {e.name} ({e.id})\n"
         text += "\n"  # guild 分隔空行
-
+    channel = ctx.channel
+    channel = global_rate_limiter.get(channel)
     for chunk in chunk_text(text):
-        await ctx.send(chunk)
+        await asyncio.create_task(channel.send(chunk))
 
 
 async def has_reacted(message:discord.Message, emoji:Union[str,discord.Emoji], user:discord.User) -> bool:
