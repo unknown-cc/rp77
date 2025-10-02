@@ -6,6 +6,7 @@ import asyncio
 import edge_tts
 import os
 import uuid
+import traceback
 
 class VoiceQueue:
     def __init__(self):
@@ -27,15 +28,15 @@ class VoiceQueue:
             # terminal(vc.channel)
             if vc.channel.id != voice_channel.id:
                 await vc.disconnect()
-                await voice_channel.connect()
+                vc = await voice_channel.connect()
         else:
             vc = await voice_channel.connect()
         return vc
 
-    async def add_to_queue(self, voice_channel_id, content, type="text", volume=0.5, leave=False, delete_file=False):
+    async def add_to_queue(self, voice_channel_id, content, type="text", volume=0.5, leave=False, delete_file=False , member : discord.Member = None):
         guild_id = self.bot.get_channel(voice_channel_id).guild.id
         queue = self.queue_guild.setdefault(guild_id, asyncio.Queue())
-        await queue.put((voice_channel_id, content, type, volume, leave, delete_file))
+        await queue.put((voice_channel_id, content, type, volume, leave, delete_file , member))
 
         if guild_id not in self.task_dict or self.task_dict[guild_id].done():
             self.task_dict[guild_id] = asyncio.create_task(self._voice_loop(guild_id))
@@ -43,7 +44,7 @@ class VoiceQueue:
     async def _voice_loop(self, guild_id:int):
         queue = self.queue_guild[guild_id]
         while True:
-            voice_channel_id, content, type, volume, leave, delete_file = await queue.get()
+            voice_channel_id, content, type, volume, leave, delete_file , member = await queue.get()
             # terminal("開始", "_play_next")
 
             if type == "text":
@@ -67,22 +68,33 @@ class VoiceQueue:
             while not os.path.exists(file):
                 await asyncio.sleep(0.1)
             # terminal("exist" , "_play_next")
-            vc = await self.bot_in_voice_channel(voice_channel_id)
-            # terminal(vc , "_play_next")
-            if not vc:
-                terminal("no vc" , "_play_next")
-                continue
 
-            vc.play(source)
-            while vc.is_playing():
-                await asyncio.sleep(0.1)
+            if isinstance(member, discord.Member):
+                if member.voice:
+                    voice_channel_id = member.voice.channel.id
+            try:
+                vc = await self.bot_in_voice_channel(voice_channel_id)
+                # terminal(vc , "_play_next")
+                if not vc:
+                    terminal("no vc" , "_play_next")
+                    continue
+
+                vc.play(source)
+                while vc.is_playing():
+                    await asyncio.sleep(0.1)
+
+            except Exception as e:
+                traceback.print_exc()
+                terminal(e)
 
             if delete_file:
                 os.remove(file)
 
             if queue.empty() and leave:
                 await vc.disconnect()
-
+                break
+                # terminal(f"queue.empyty : {str(queue.empty())}" )
+                # terminal(f"leave : {str(leave)}")
             # terminal("結束", "_play_next")
 
     async def text_speak(self, text:str):

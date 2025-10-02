@@ -153,7 +153,7 @@ class AcceptOrderView(ServiceBaseView):
             if buyer.voice.channel.guild.id == MAIN_GUILD:
                 # 語音提示 -> 客人
                 voice_text = f"{str(buyer_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
-                await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True))
+                await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True , member=buyer))
     
 class OrderProccessingView(ServiceBaseView):
     def __init__(self, bot, *, timeout=None, message = None, staff_id = 0, buyer = None):
@@ -179,7 +179,7 @@ class OrderProccessingView(ServiceBaseView):
         if buyer.voice:
             if buyer.voice.channel.guild.id == MAIN_GUILD:
                 voice_text = f"{str(buyer_name)} 您好，您的訂單已製作完畢，請您至地圖440，右手邊斜坡上方－九龍堂的據點領取！"
-                await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True))
+                await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True , member=buyer))
         voice_text = f"{staff_name} 已通知 {buyer_name} 前來取貨"
         await asyncio.create_task(speak1(voice_text , ding=False))
         
@@ -255,7 +255,7 @@ class service_messages(Cog_Extension):
             if member.voice:
                 if member.voice.channel.guild.id == MAIN_GUILD:
                     voice_text = f"{str(member_name)} 您好，{text}"
-                    await asyncio.create_task(voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True))
+                    await asyncio.create_task(voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True , member=member))
             voice_text = "業，務，有，單，誰要接呢？"
             await asyncio.create_task(speak1(voice_text))
         except Exception as e:
