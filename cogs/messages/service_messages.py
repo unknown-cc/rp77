@@ -22,8 +22,10 @@ logging.basicConfig(level=logging.INFO)
 
 MAIN_GUILD = 1307808857858244629
 SUB_GUILD = 0
+
 MAIN_CHANNEL_ID = 1406370066404216912
-SUB_CHANNEL_ID = 1413338432247304353
+SALE_CHANNEL_ID = 1407988870196367391
+ORDER_CHANNEL_ID = 1413338432247304353
 READY_EMOJI = "<a:load:972447733971550220>"
 MAKED_EMOJI = "<a:ding1:1004602332971028581>"
 FINISH_EMOJI = "<a:check4:972447733740867654>"
@@ -204,11 +206,23 @@ class OrderProccessingView(ServiceBaseView):
                     except : pass
         embed = discord.Embed(description=f"{FINISH_EMOJI} 交易已完成" , colour=discord.Colour.green())
         await safe_main_channel.send(content=f"-# <t:{int(now_offset(seconds=DELETE_TIME).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=DELETE_TIME , reference=origin_message)
-        await origin_message.add_reaction(FINISH_EMOJI)
+        try:
+            await origin_message.add_reaction(FINISH_EMOJI)
+        except Exception as e:
+            traceback.print_exc()
         voice_text = f"{staff_name} 已將 {buyer_name} 的訂單處理完畢"
         await speak1(voice_text , ding=False)
-        await interaction.message.add_reaction(FINISH_EMOJI)
+        try:
+            await interaction.message.add_reaction(FINISH_EMOJI)
+        except:
+            traceback.print_exc()
 
+        # # 銷售回報
+        # sale_channel = self.bot.get_channel(SALE_CHANNEL_ID)
+        # safe_sale_channel = global_rate_limiter.get(sale_channel)
+        # embed = Embed(title="銷售回報")
+        # await sale_channel.send()
+        
 class service_messages(Cog_Extension):
     def __init__(self, bot:commands.Bot):
         super().__init__(bot)
@@ -246,7 +260,7 @@ class service_messages(Cog_Extension):
                     content = content.replace(role.mention , f"@{role.name} ({role.id})")
 
             content = f"<@&1413338884800249936> [業務連結]({message.jump_url})\n" + content
-            sub_channel = self.bot.get_channel(SUB_CHANNEL_ID)
+            sub_channel = self.bot.get_channel(ORDER_CHANNEL_ID)
             await sub_channel.send(content=content , view=AcceptOrderView(bot = self.bot , message=message , buyer=message.author))
             text = "已收到您的訂單，請耐心等候業務人員接單！"
             embed = Embed(description=f"{emojigot('butterfly1')} {text}" , colour=discord.Colour.green())

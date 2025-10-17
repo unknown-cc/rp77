@@ -43,6 +43,7 @@ ACTION_BUCKETS = {
     "Thread.send": RateLimitBucket(rate=5, per=5),
     "Thread.delete": RateLimitBucket(rate=5, per=5),
     "Thread.edit": RateLimitBucket(rate=5, per=5),
+    "TextChannel.edit": RateLimitBucket(rate=5, per=5),
     "TextChannel.send": RateLimitBucket(rate=5, per=5),
     "TextChannel.delete": RateLimitBucket(rate=5, per=5),
     "TextChannel.create_thread": RateLimitBucket(rate=1, per=10),
