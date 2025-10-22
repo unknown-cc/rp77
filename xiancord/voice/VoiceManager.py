@@ -7,13 +7,11 @@ import edge_tts
 import os
 import uuid
 import traceback
-
 class VoiceQueue:
     def __init__(self):
         self.bot : commands.Bot = None
         self.queue_guild : dict[int, asyncio.Queue] = {}     # guild_id -> Queue
         self.task_dict : dict[int, asyncio.Task] = {}       # guild_id -> Task
-
     async def bot_in_voice_channel(self, voice_channel_id:int) -> Union[discord.VoiceClient, None]:
         if not self.bot:
             terminal("未設置 bot" , "bot_in_voice_channel")
@@ -98,9 +96,13 @@ class VoiceQueue:
             # terminal("結束", "_play_next")
 
     async def text_speak(self, text:str):
-        file = f"speak_{uuid.uuid4().hex}.mp3"
-        voice = "zh-TW-HsiaoChenNeural"  # 甜美女聲
-        # terminal(text)
-        communicate = edge_tts.Communicate(text, voice=voice)
-        await communicate.save(file)
+        file = f"speak_{uuid.uuid4().hex}.wav"
+
+        try:
+            voice = "zh-TW-HsiaoChenNeural"  # 甜美女聲
+            terminal(text)
+            communicate = edge_tts.Communicate(text, voice=voice)
+            await communicate.save(file)
+        except :
+            traceback.print_exc()
         return file

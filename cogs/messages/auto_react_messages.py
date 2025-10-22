@@ -26,6 +26,7 @@ class auto_react_messages(Cog_Extension):
         self.event = "業務事件"
         self.react_channels = [
             1429801527844933724,
+            1429486671291748513,
         ]
 
     @commands.Cog.listener("on_message")
