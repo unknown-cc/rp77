@@ -4,8 +4,6 @@ from xiancord.core import Cog_Extension
 from discord.ext import commands
 from xiancord.logger import terminal
 import discord
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
 from zoneinfo import ZoneInfo
 from xiancord.time import now_str
 from xiancord.voice import init_voice_queue
