@@ -231,11 +231,12 @@ class service_messages(Cog_Extension):
     @commands.Cog.listener("on_message")
     async def on_message(self , message:discord.Message):
         try:
+            guild = message.guild
+            if not guild : return
             safe_message = global_rate_limiter.get(message)
             member = message.author
             member_name = get_rpnick_name(self.bot , member)
             if member.bot : return
-            guild = message.guild
             channel = message.channel
             channel = global_rate_limiter.get(channel)
             if not (guild.id == MAIN_GUILD and channel.id == MAIN_CHANNEL_ID) : return

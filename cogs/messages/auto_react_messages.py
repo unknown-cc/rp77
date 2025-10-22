@@ -25,8 +25,10 @@ class auto_react_messages(Cog_Extension):
         super().__init__(bot)
         self.event = "業務事件"
         self.react_channels = [
-            1429801527844933724,
+            1429801527844933724, # 宣傳布達
             1429486671291748513,
+            1428111350931918941, # 公倉回報
+            1428111827178623138, # 銷售回報
         ]
 
     @commands.Cog.listener("on_message")
@@ -39,7 +41,6 @@ class auto_react_messages(Cog_Extension):
             await message.add_reaction(emojigot('check4'))
         except :
             traceback.print_exc()
-            
-            
+    
 async def setup(bot:commands.Bot):
     await bot.add_cog(auto_react_messages(bot))
