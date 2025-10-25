@@ -210,11 +210,13 @@ class OrderProccessingView(ServiceBaseView):
             await origin_message.add_reaction(FINISH_EMOJI)
         except Exception as e:
             traceback.print_exc()
+            terminal(f"完成訊息：新增表情－ origin_message「{e}」" , "服務通知")
         voice_text = f"{staff_name} 已將 {buyer_name} 的訂單處理完畢"
         await speak1(voice_text , ding=False)
         try:
             await interaction.message.add_reaction(FINISH_EMOJI)
-        except:
+        except Exception as e:
+            terminal(f"完成訊息：新增表情－ interaction.message「{e}」" , "服務通知")
             traceback.print_exc()
 
         # # 銷售回報
