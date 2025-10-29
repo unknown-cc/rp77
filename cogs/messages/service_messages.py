@@ -119,6 +119,7 @@ class ServiceBaseView(View):
         else:
             # await interaction.response.defer()
             return False
+        
 class BuyerCancelView(ServiceBaseView):
     def __init__(self, bot, *, timeout=None, message = None, staff_id = 0, buyer = None):
         super().__init__(bot, timeout=timeout, message=message, staff_id=staff_id, buyer=buyer)
@@ -224,7 +225,7 @@ class OrderProccessingView(ServiceBaseView):
         # safe_sale_channel = global_rate_limiter.get(sale_channel)
         # embed = Embed(title="銷售回報")
         # await sale_channel.send()
-        
+
 class service_messages(Cog_Extension):
     def __init__(self, bot:commands.Bot):
         super().__init__(bot)
@@ -267,12 +268,7 @@ class service_messages(Cog_Extension):
             await sub_channel.send(content=content , view=AcceptOrderView(bot = self.bot , message=message , buyer=message.author))
             text = "已收到您的訂單，請耐心等候業務人員接單！"
             embed = Embed(description=f"{emojigot('butterfly1')} {text}" , colour=discord.Colour.green())
-            await asyncio.create_task(channel.send(content=f"-# <t:{int(now_offset(seconds=DELETE_TIME).timestamp())}:R>自動刪除此訊息" , embed=embed , delete_after=DELETE_TIME ,reference=message))
-            # 獲取成員的 vc 狀態
-            if member.voice:
-                if member.voice.channel.guild.id == MAIN_GUILD:
-                    voice_text = f"{str(member_name)} 您好，{text}"
-                    await asyncio.create_task(voice_queue.add_to_queue(member.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True , member=member))
+            await asyncio.create_task(channel.send(embed=embed ,reference=message))
             voice_text = "業，務，有，單，誰要接呢？"
             await asyncio.create_task(speak1(voice_text))
         except Exception as e:
