@@ -152,11 +152,11 @@ class AcceptOrderView(ServiceBaseView):
         await asyncio.create_task(speak1(voice_text , ding=False))
         self.staff_id = interaction.user.id
         # 獲取成員的 vc 狀態
-        if buyer.voice :
-            if buyer.voice.channel.guild.id == MAIN_GUILD:
-                # 語音提示 -> 客人
-                voice_text = f"{str(buyer_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
-                await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True , member=buyer))
+        # if buyer.voice :
+        #     if buyer.voice.channel.guild.id == MAIN_GUILD:
+        #         # 語音提示 -> 客人
+        #         voice_text = f"{str(buyer_name)} 您好，您的訂單正在處理當中，製作完畢會再次通知您。請稍候..."
+        #         await asyncio.create_task(voice_queue.add_to_queue(buyer.voice.channel.id , voice_text ,type="text" , volume=1.0 , leave=True , delete_file=True , member=buyer))
     
 class OrderProccessingView(ServiceBaseView):
     def __init__(self, bot, *, timeout=None, message = None, staff_id = 0, buyer = None):
