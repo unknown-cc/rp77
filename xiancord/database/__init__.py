@@ -5,7 +5,8 @@ import json
 import asyncio
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 這是 __init__.py 所在資料夾
+BASE_DIR = Path(__file__).resolve().parent
+credentials_path = BASE_DIR / "credentials.json"
 credentials_path = os.path.join(BASE_DIR, "./credentials.json")
 
 db = SpreadsheetManager()
