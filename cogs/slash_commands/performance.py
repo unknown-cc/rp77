@@ -181,7 +181,7 @@ class TicketView(View):
         super().__init__(timeout=timeout)
     
     @discord.ui.button(label="上級簽核", custom_id="signButton" ,
-                       style=ButtonStyle.grey , emoji=emojigot('AnimeDot_Yellow'))
+                       style=ButtonStyle.grey , emoji=emojigot('check3'))
     async def signButtonCallback(self , interaction : Interaction , button :Button):
         for role in interaction.user.roles:
             if role.id == ROLE_ID:
@@ -208,7 +208,7 @@ class TicketView(View):
         await update_data(discord_id , nick , product , amount)
 
     @discord.ui.button(label="抽單", custom_id="deleteButton" ,
-                       style=ButtonStyle.grey , emoji=emojigot('AnimeDot_Red'))
+                       style=ButtonStyle.grey , emoji=emojigot('Sakura_red'))
     async def deleteButtonCallback(self , interaction : Interaction , button :Button):
         embed = interaction.message.embeds[0]
         for field in embed.fields:
