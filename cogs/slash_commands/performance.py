@@ -128,7 +128,7 @@ class performance(Cog_Extension):
                 member = guild.get_member(int(discord_id))
                 if not member:continue
                 output += f"### {emojigot('029')} {member.nick} ({member.id})｜總分潤：{r['amount']} 元\n{r['detail']}\n"
-            output += f"### {emojigot('040')} 郭郭 ({golden_master}) 總分潤：{golden_result['amount']} 元\n{golden_result['detail']}"
+            output += f"### {emojigot('040')} 郭郭 ({golden_master}) ｜總分潤：{golden_result['amount']} 元\n{golden_result['detail']}"
             if delete:
                 title = f"### {emojigot('StarryMoon_azalea')} 總營收："
             else:
