@@ -7,7 +7,6 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent
 credentials_path = BASE_DIR / "credentials.json"
-credentials_path = os.path.join(BASE_DIR, "./credentials.json")
 
 db = SpreadsheetManager()
 
