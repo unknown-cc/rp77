@@ -58,7 +58,7 @@ async def update_data(discord_id , nick , product , amount):
     elif product == "毒品出售" :
         commission1 = 0.6
         commission2 = 0.0
-        commission4 = 0.1
+        commission4 = 0.7 * 0.1
     await WORKSHEET.append_row([now_str("%m/%d %H:%M:%S") , nick , str(discord_id) , product , amount , amount * commission1 , amount * commission2 , amount * commission4])
 
 async def get_data(delete_data = False):
@@ -114,7 +114,7 @@ class performance(Cog_Extension):
             app_commands.Choice(name="跑速藥水" , value= "跑速藥水"),
             app_commands.Choice(name="友露安" , value= "友露安"),
             app_commands.Choice(name="槍枝出售" , value= "槍枝出售"),
-            app_commands.Choice(name="毒品出售" , value= "毒品販售"),])
+            app_commands.Choice(name="毒品出售" , value= "毒品出售"),])
     async def performance_result(self , interaction:Interaction , product:str , amount : int , image:discord.Attachment):
         user = interaction.user
         embed = Embed(title = "銷售回報" , description=f"__<@&{ROLE_ID}> 簽核過才會進資料庫__")
