@@ -133,7 +133,7 @@ class performance(Cog_Extension):
                 title = f"### {emojigot('StarryMoon_azalea')} 總營收："
             else:
                 title = f"### {emojigot('StarryMoon_azalea')} 當前營收："
-            output = title + f"{total_result['total']} 元\n公司｜總抽成：{total_result['company']} 元\n成員｜總抽成：{total_result['personal']} 元\n郭郭｜總抽成：{golden_result['amount']} 元\n" + output
+            output = title + f"{total_result['total']} 元\n{emojigot('ArrowWave_red')}公司｜總抽成：{total_result['company']} 元\n{emojigot('ArrowWave_white')}成員｜總抽成：{total_result['personal']} 元\n{emojigot('ArrowWave_cyan')}郭郭｜總抽成：{golden_result['amount']} 元\n" + output
         else:
             output = f"{emojigot('butterfly1')} 目前沒有任何紀錄"
         return output
