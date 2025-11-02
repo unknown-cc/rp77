@@ -49,7 +49,9 @@ class login_event(Cog_Extension):
         # 登入
         login_string = f"機器人：{self.bot.user}\n"
         login_string += f"ID：{self.bot.user.id}"
-
+        # 指令
+        guild = discord.Object(1383475660646907966)
+        await self.bot.tree.sync(guild=guild)
 
 
 async def setup(bot:commands.Bot):

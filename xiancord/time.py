@@ -9,6 +9,7 @@ def now_offset(days=0, hours=0, minutes=0, seconds=0):
     base = now()
     offset = timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
     return base + offset
+
 def now_str(format:str):
     return now().strftime(format)
 
