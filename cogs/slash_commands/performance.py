@@ -187,7 +187,7 @@ class TicketView(View):
             if role.id == ROLE_ID:
                 break
         else:
-            return await interaction.response.send_message(f"{emojigot('no3')} 你不是 <@&ROLD_ID>" , ephemeral=True)
+            return await interaction.response.send_message(f"{emojigot('no3')} 你不是 <@&{ROLE_ID}>" , ephemeral=True)
         self.clear_items()
         superior = get_nick(interaction.user)
         button.label = f"{superior}｜已簽核"
@@ -223,7 +223,7 @@ class TicketView(View):
                 if role.id == ROLE_ID:
                     break
             else:
-                return await interaction.response.send_message(f"{emojigot('no3')} 必須是本人或 <@&ROLD_ID> 才能撤銷" , ephemeral=True)
+                return await interaction.response.send_message(f"{emojigot('no3')} 必須是本人或 <@&{ROLE_ID}> 才能撤銷" , ephemeral=True)
             modal = Modal(title="抽單" , timeout=None)
             reason_input_text = TextInput(label="原因" , placeholder="請輸入原因" ,default="錯" , required=True , max_length=10)
             async def on_submit(interaction:Interaction):
