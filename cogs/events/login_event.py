@@ -34,7 +34,9 @@ class login_event(Cog_Extension):
                             continue
                         parent_fix = parent[2:].replace("\\",".").replace("/",".")
                         terminal(f"{parent_fix}:{file[:-3]} >> 已載入 <<" , "插件")
-                        await bot.load_extension(f"{parent_fix}.{file[:-3]}")
+                        try:
+                            await bot.load_extension(f"{parent_fix}.{file[:-3]}")
+                        except:pass
 
     @commands.Cog.listener("on_ready")
     async def on_ready(self):

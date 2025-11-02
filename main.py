@@ -52,7 +52,9 @@ async def load_extensions():
                             continue
                         parent_fix = parent[2:].replace("\\",".").replace("/",".")
                         terminal(f"{parent_fix}:{file[:-3]} >> 已載入 <<", "插件")
-                        await bot.load_extension(f"{parent_fix}.{file[:-3]}")
+                        try:
+                            await bot.load_extension(f"{parent_fix}.{file[:-3]}")
+                        except:pass
 
 token = os.environ['TOKEN']
 
