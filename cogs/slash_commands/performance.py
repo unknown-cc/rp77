@@ -130,9 +130,9 @@ class performance(Cog_Extension):
                 output += f"### {emojigot('029')} {member.nick} ({member.id})｜總分潤：{r['amount']} 元\n{r['detail']}\n"
             output += f"### {emojigot('040')} 郭郭 ({golden_master}) 總分潤：{golden_result['amount']} 元\n{golden_result['detail']}"
             if delete:
-                title = f"### {emojigot('')}總營收："
+                title = f"### {emojigot('StarryMoon_azalea')} 總營收："
             else:
-                title = f"### 當前營收："
+                title = f"### {emojigot('StarryMoon_azalea')} 當前營收："
             output = title + f"{total_result['total']} 元\n公司｜總抽成：{total_result['company']} 元\n成員｜總抽成：{total_result['personal']} 元\n郭郭｜總抽成：{golden_result['amount']} 元\n" + output
         else:
             output = f"{emojigot('butterfly1')} 目前沒有任何紀錄"
