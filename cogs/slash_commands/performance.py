@@ -113,8 +113,7 @@ class performance(Cog_Extension):
             app_commands.Choice(name="槍枝修復" , value= "槍枝修復"),
             app_commands.Choice(name="跑速藥水" , value= "跑速藥水"),
             app_commands.Choice(name="友露安" , value= "友露安"),
-            app_commands.Choice(name="槍枝出售" , value= "槍枝出售"),
-            app_commands.Choice(name="毒品出售" , value= "毒品出售"),])
+            app_commands.Choice(name="槍枝出售" , value= "槍枝出售"),])
     async def performance_result(self , interaction:Interaction , product:str , amount : int , image:discord.Attachment):
         user = interaction.user
         embed = Embed(title = "銷售回報" , description=f"__<@&{ROLE_ID}> 簽核過才會進資料庫__")
