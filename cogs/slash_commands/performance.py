@@ -150,13 +150,13 @@ class performance(Cog_Extension):
                 new_line = line + "\n"
                 if len(part + new_line) >= 2000:
                     await interaction.channel.send(content=part)
-                    part = ""
+                    part = new_line
                 else:
                     part+= new_line
             else:
                 await interaction.channel.send(content=part)
         else:
-            await interaction.followup.edit_message('@original' , content=output)
+            await interaction.channel.send(content=output)
 
     performance_group = app_commands.Group(name=ls("performance_group" , zh_TW="業績") , description=ls("performance_group" , zh_TW="業績相關指令"),
                                            guild_ids=[GUILD_ID,] , guild_only=True)
