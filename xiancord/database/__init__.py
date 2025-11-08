@@ -9,10 +9,11 @@ import os
 db = SpreadsheetManager()
 
 async def db_init():
-    BASE_DIR = "/etc/secrets/"
-    credentials_path = BASE_DIR + "credentials.json"
-    with open(credentials_path , "r", encoding="utf-8") as f:
-        creds = json.load(f)
+    # BASE_DIR = "/etc/secrets/"
+    # credentials_path = BASE_DIR + "credentials.json"
+    # with open(credentials_path , "r", encoding="utf-8") as f:
+    #     creds = json.load(f)
+    creds = os.getenv("credentials")
     await db.init(creds)
     await db.add_spreadsheet("黑曜國際")
 
